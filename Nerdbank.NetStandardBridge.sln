@@ -21,16 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9E154A29-179
 		src\Directory.Build.targets = src\Directory.Build.targets
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{36CCE840-6FE5-4DB9-A8D5-8CF3CB6D342A}"
-	ProjectSection(SolutionItems) = preProject
-		test\.editorconfig = test\.editorconfig
-		test\Directory.Build.props = test\Directory.Build.props
-		test\Directory.Build.targets = test\Directory.Build.targets
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nerdbank.NetStandardBridge", "src\Nerdbank.NetStandardBridge\Nerdbank.NetStandardBridge.csproj", "{980F34D0-A9D3-4F8E-B09C-4DD03423C526}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nerdbank.NetStandardBridge.Tests", "test\Nerdbank.NetStandardBridge.Tests\Nerdbank.NetStandardBridge.Tests.csproj", "{BA92C428-1D95-4437-8744-596123AFDEF0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,10 +33,6 @@ Global
 		{980F34D0-A9D3-4F8E-B09C-4DD03423C526}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{980F34D0-A9D3-4F8E-B09C-4DD03423C526}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{980F34D0-A9D3-4F8E-B09C-4DD03423C526}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BA92C428-1D95-4437-8744-596123AFDEF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BA92C428-1D95-4437-8744-596123AFDEF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BA92C428-1D95-4437-8744-596123AFDEF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BA92C428-1D95-4437-8744-596123AFDEF0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -55,6 +42,5 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{980F34D0-A9D3-4F8E-B09C-4DD03423C526} = {9E154A29-1796-4B85-BD81-B6A385D8FF71}
-		{BA92C428-1D95-4437-8744-596123AFDEF0} = {36CCE840-6FE5-4DB9-A8D5-8CF3CB6D342A}
 	EndGlobalSection
 EndGlobal

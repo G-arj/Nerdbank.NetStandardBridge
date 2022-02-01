@@ -23,6 +23,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9E154A29-179
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nerdbank.NetStandardBridge", "src\Nerdbank.NetStandardBridge\Nerdbank.NetStandardBridge.csproj", "{980F34D0-A9D3-4F8E-B09C-4DD03423C526}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{FF86E69C-A401-4BD5-A382-347262BACA46}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nerdbank.NetStandardBridge.Tests", "test\Nerdbank.NetStandardBridge.Tests\Nerdbank.NetStandardBridge.Tests.csproj", "{0A0E3393-7EBB-4AD1-A21C-043BCD923EEA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,10 @@ Global
 		{980F34D0-A9D3-4F8E-B09C-4DD03423C526}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{980F34D0-A9D3-4F8E-B09C-4DD03423C526}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{980F34D0-A9D3-4F8E-B09C-4DD03423C526}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A0E3393-7EBB-4AD1-A21C-043BCD923EEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A0E3393-7EBB-4AD1-A21C-043BCD923EEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A0E3393-7EBB-4AD1-A21C-043BCD923EEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A0E3393-7EBB-4AD1-A21C-043BCD923EEA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,5 +50,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{980F34D0-A9D3-4F8E-B09C-4DD03423C526} = {9E154A29-1796-4B85-BD81-B6A385D8FF71}
+		{0A0E3393-7EBB-4AD1-A21C-043BCD923EEA} = {FF86E69C-A401-4BD5-A382-347262BACA46}
 	EndGlobalSection
 EndGlobal

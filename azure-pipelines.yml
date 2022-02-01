@@ -1,7 +1,8 @@
 trigger:
+  batch: true
   branches:
     include:
-    - master
+    - main
     - 'validate/*'
   paths:
     exclude:
@@ -14,6 +15,7 @@ variables:
   TreatWarningsAsErrors: true
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   BuildConfiguration: Release
+  codecov_token: 0805af23-3788-4e71-9e12-b9e5fab5c99c
   ci_feed: OSS/PublicCI
   NUGET_PACKAGES: $(Agent.TempDirectory)/.nuget/packages
 

@@ -21,4 +21,10 @@
     <Using Include="Xunit.Abstractions" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="devenv.exe.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

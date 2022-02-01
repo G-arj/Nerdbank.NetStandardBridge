@@ -1,6 +1,6 @@
 # Nerdbank.NetStandardBridge
 
-***A reference + fascade library to bring additional types to .NET Standard.***
+***A reference + facade library to bring additional types to .NET Standard.***
 
 [![NuGet package](https://img.shields.io/nuget/v/Nerdbank.NetStandardBridge.svg)](https://nuget.org/packages/Nerdbank.NetStandardBridge)
 

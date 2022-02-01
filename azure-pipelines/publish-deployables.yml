@@ -1,4 +1,8 @@
 steps:
+- download: current
+  displayName: Download deployables
+  artifact: deployables-Windows
+
 - task: NuGetToolInstaller@1
   displayName: Use NuGet 5.x
   inputs:
@@ -8,7 +12,7 @@ steps:
   displayName: Push packages to CI feed
   inputs:
     command: push
-    packagesToPush: $(Build.StagingDirectory)/deployables-Linux/*.nupkg
+    packagesToPush: $(Pipeline.Workspace)/deployables-Windows/*.nupkg
     nuGetFeedType: internal
     publishVstsFeed: $(ci_feed)
     allowPackageConflicts: true

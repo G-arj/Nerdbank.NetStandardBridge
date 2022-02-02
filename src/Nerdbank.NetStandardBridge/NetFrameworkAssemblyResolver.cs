@@ -34,13 +34,15 @@ public class NetFrameworkAssemblyResolver
     /// </summary>
     /// <param name="configFile">The path to the .exe.config file to parse for assembly load rules.</param>
     /// <param name="baseDir">The path to the directory containing the entrypoint executable. If not specified, the directory containing <paramref name="configFile"/> will be used.</param>
-    public NetFrameworkAssemblyResolver(string configFile, string? baseDir = null)
+    /// <param name="traceSource">A <see cref="TraceSource"/> to log to.</param>
+    public NetFrameworkAssemblyResolver(string configFile, string? baseDir = null, TraceSource? traceSource = null)
     {
         if (string.IsNullOrEmpty(configFile))
         {
             throw new ArgumentException($"'{nameof(configFile)}' cannot be null or empty.", nameof(configFile));
         }
 
+        this.TraceSource = traceSource;
         this.BaseDir = baseDir ?? Path.GetDirectoryName(Path.GetFullPath(configFile)) ?? throw new ArgumentException("Unable to compute the base directory", nameof(baseDir));
 
         var knownAssemblies = new Dictionary<AssemblySimpleName, AssemblyLoadRules>();
@@ -99,7 +101,7 @@ public class NetFrameworkAssemblyResolver
                 {
                     if (existingCodebase != fullPath)
                     {
-                        Console.Error.WriteLine($"Codebase for {assemblySimpleName}, Version={version} given multiple times with inconsistent paths.");
+                        traceSource?.TraceEvent(TraceEventType.Warning, (int)TraceEvents.InvalidConfiguration, "Codebase for {0}, Version={1} given multiple times with inconsistent paths.", assemblySimpleName, version);
                     }
                 }
                 else
@@ -124,6 +126,22 @@ public class NetFrameworkAssemblyResolver
 
         this.knownAssemblies = knownAssemblies;
     }
+
+    /// <summary>
+    /// Events that may be traced to the <see cref="TraceSource"/>.
+    /// </summary>
+    public enum TraceEvents
+    {
+        /// <summary>
+        /// Occurs when an invalid configuration is encountered.
+        /// </summary>
+        InvalidConfiguration,
+    }
+
+    /// <summary>
+    /// Gets the <see cref="TraceSource"/> to use for logging.
+    /// </summary>
+    protected TraceSource? TraceSource { get; }
 
     /// <summary>
     /// Gets the list of probing paths through which a search for assemblies may be conducted.

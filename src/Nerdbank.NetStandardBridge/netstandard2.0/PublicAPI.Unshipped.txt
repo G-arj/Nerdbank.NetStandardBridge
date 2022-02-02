@@ -2,8 +2,11 @@ Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver
 Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.BaseDir.get -> string!
 Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.GetAssemblyNameByPolicy(System.Reflection.AssemblyName! assemblyName) -> System.Reflection.AssemblyName?
 Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.Load(System.Reflection.AssemblyName! assemblyName) -> System.Reflection.Assembly?
-Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.NetFrameworkAssemblyResolver(string! configFile, string? baseDir = null) -> void
+Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.NetFrameworkAssemblyResolver(string! configFile, string? baseDir = null, System.Diagnostics.TraceSource? traceSource = null) -> void
 Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.ProbingPaths.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.TraceEvents
+Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.TraceEvents.InvalidConfiguration = 0 -> Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.TraceEvents
+Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.TraceSource.get -> System.Diagnostics.TraceSource?
 System.Runtime.InteropServices.ImportedFromTypeLibAttribute
 System.Runtime.InteropServices.ImportedFromTypeLibAttribute.ImportedFromTypeLibAttribute(string! tlbFile) -> void
 System.Runtime.InteropServices.ImportedFromTypeLibAttribute.Value.get -> string!

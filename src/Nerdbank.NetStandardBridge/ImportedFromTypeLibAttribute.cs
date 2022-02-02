@@ -25,6 +25,8 @@ namespace System.Runtime.InteropServices
 
 #else
 
+#pragma warning disable RS0041 // oblivious types in some target frameworks
+
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.InteropServices.ImportedFromTypeLibAttribute))]
 
 #endif

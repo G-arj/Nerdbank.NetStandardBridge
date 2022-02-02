@@ -1,11 +1,14 @@
 ﻿// Copyright (c) Andrew Arnott. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETCOREAPP
+#if NETCOREAPP || NET472
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
 using System.Reflection;
 using System.Runtime.InteropServices;
+#if NETCOREAPP
+using System.Runtime.Loader;
+#endif
 using Nerdbank.NetStandardBridge;
 
 public class NetFrameworkAssemblyResolverTests
@@ -19,6 +22,10 @@ public class NetFrameworkAssemblyResolverTests
         string configLocation = Path.Combine(testBinDir, "devenv.exe.config");
         this.loader = new TestableAssemblyLoader(configLocation, TestBaseDir);
     }
+
+    private static AssemblyName ValidationAssemblyName => new AssemblyName($"Validation, Version=2.5.0.0, Culture=neutral, PublicKeyToken=2fc06f0d701809a7");
+
+    private static AssemblyName NonExistingAssemblyName => new AssemblyName($"NonExisting, Version=2.5.0.0, Culture=neutral, PublicKeyToken=2fc06f0d701809a7");
 
     [Fact]
     public void Ctor_ValidatesInputs()
@@ -41,7 +48,11 @@ public class NetFrameworkAssemblyResolverTests
     [Fact]
     public void ProbingPathsAreRelative()
     {
+#if NETFRAMEWORK
+        Assert.All(this.loader.ProbingPaths, path => Assert.False(Path.IsPathRooted(path)));
+#else
         Assert.All(this.loader.ProbingPaths, path => Assert.False(Path.IsPathFullyQualified(path)));
+#endif
     }
 
     [Fact]
@@ -190,6 +201,77 @@ public class NetFrameworkAssemblyResolverTests
         Assert.True(this.loader.BaseFileExists(Assembly.GetExecutingAssembly().Location));
         Assert.False(this.loader.BaseFileExists(Assembly.GetExecutingAssembly().Location + ".notexist"));
     }
+
+    [Fact]
+    public void Load()
+    {
+#if NETFRAMEWORK
+        AppDomain appDomain = AppDomain.CreateDomain("test");
+        try
+        {
+            var helper = (AppDomainHelper)appDomain.CreateInstanceFromAndUnwrap(this.GetType().Assembly.CodeBase, typeof(AppDomainHelper).FullName);
+            Assert.True(helper.TryLoadAssembly());
+        }
+        finally
+        {
+            AppDomain.Unload(appDomain);
+        }
+#else
+        AssemblyLoadContext alc = new("test");
+        NetFrameworkAssemblyResolver loader = new("Unreachable.config");
+        Assert.Throws<FileNotFoundException>(() => alc.LoadFromAssemblyName(ValidationAssemblyName));
+        Assembly? validationAssembly = loader.Load(ValidationAssemblyName);
+        Assert.NotNull(validationAssembly);
+#endif
+    }
+
+    [Fact]
+    public void HookupResolver()
+    {
+#if NETFRAMEWORK
+        AppDomain appDomain = AppDomain.CreateDomain("test");
+        try
+        {
+            var helper = (AppDomainHelper)appDomain.CreateInstanceFromAndUnwrap(this.GetType().Assembly.CodeBase, typeof(AppDomainHelper).FullName);
+            Assert.Throws<FileNotFoundException>(() => appDomain.Load(ValidationAssemblyName));
+            Assert.True(helper.TryLoadAssemblyWithHookup());
+        }
+        finally
+        {
+            AppDomain.Unload(appDomain);
+        }
+#else
+        AssemblyLoadContext alc = new("test");
+        NetFrameworkAssemblyResolver loader = new("Unreachable.config");
+        Assert.Throws<FileNotFoundException>(() => alc.LoadFromAssemblyName(ValidationAssemblyName));
+        loader.HookupResolver(alc);
+        Assembly? validationAssembly = alc.LoadFromAssemblyName(ValidationAssemblyName);
+        Assert.NotNull(validationAssembly);
+#endif
+    }
+
+#if NETFRAMEWORK
+    private class AppDomainHelper : MarshalByRefObject
+    {
+        internal bool TryLoadAssembly()
+        {
+            NetFrameworkAssemblyResolver loader = new("Unreachable.config");
+            Assert.Throws<FileNotFoundException>(() => Assembly.Load(ValidationAssemblyName));
+            Assembly? validationAssembly = loader.Load(ValidationAssemblyName);
+            return validationAssembly is object;
+        }
+
+        internal bool TryLoadAssemblyWithHookup()
+        {
+            NetFrameworkAssemblyResolver loader = new("Unreachable.config");
+            Assert.Throws<FileNotFoundException>(() => Assembly.Load(ValidationAssemblyName));
+            loader.HookupResolver();
+            Assert.Throws<FileNotFoundException>(() => Assembly.Load(NonExistingAssemblyName));
+            Assembly? validationAssembly = Assembly.Load(ValidationAssemblyName);
+            return validationAssembly is object;
+        }
+    }
+#endif
 
     private class TestableAssemblyLoader : NetFrameworkAssemblyResolver
     {

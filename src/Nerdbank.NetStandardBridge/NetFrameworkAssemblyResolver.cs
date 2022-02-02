@@ -2,14 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
-#if NETCOREAPP
-
 namespace Nerdbank.NetStandardBridge;
 
+#if NET461 || NETSTANDARD2_0_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Reflection;
+#if NETCOREAPP
 using System.Runtime.Loader;
+#endif
 using System.Xml.Linq;
 
 /// <summary>
@@ -24,20 +25,24 @@ public class NetFrameworkAssemblyResolver
     /// </summary>
     private readonly IReadOnlyDictionary<AssemblySimpleName, AssemblyLoadRules> knownAssemblies;
     private readonly string[] probingPaths;
+#if NETCOREAPP3_1_OR_GREATER
     private readonly Dictionary<AssemblyName, VSAssemblyLoadContext> loadContextsByAssemblyName = new Dictionary<AssemblyName, VSAssemblyLoadContext>(AssemblyNameEqualityComparer.Instance);
+#endif
 
     /// <summary>
     /// Initializes a new instance of the <see cref="NetFrameworkAssemblyResolver"/> class.
     /// </summary>
     /// <param name="configFile">The path to the .exe.config file to parse for assembly load rules.</param>
     /// <param name="baseDir">The path to the directory containing the entrypoint executable. If not specified, the directory containing <paramref name="configFile"/> will be used.</param>
-    public NetFrameworkAssemblyResolver(string configFile, string? baseDir = null)
+    /// <param name="traceSource">A <see cref="TraceSource"/> to log to.</param>
+    public NetFrameworkAssemblyResolver(string configFile, string? baseDir = null, TraceSource? traceSource = null)
     {
         if (string.IsNullOrEmpty(configFile))
         {
             throw new ArgumentException($"'{nameof(configFile)}' cannot be null or empty.", nameof(configFile));
         }
 
+        this.TraceSource = traceSource;
         this.BaseDir = baseDir ?? Path.GetDirectoryName(Path.GetFullPath(configFile)) ?? throw new ArgumentException("Unable to compute the base directory", nameof(baseDir));
 
         var knownAssemblies = new Dictionary<AssemblySimpleName, AssemblyLoadRules>();
@@ -96,7 +101,7 @@ public class NetFrameworkAssemblyResolver
                 {
                     if (existingCodebase != fullPath)
                     {
-                        Console.Error.WriteLine($"Codebase for {assemblySimpleName}, Version={version} given multiple times with inconsistent paths.");
+                        traceSource?.TraceEvent(TraceEventType.Warning, (int)TraceEvents.InvalidConfiguration, "Codebase for {0}, Version={1} given multiple times with inconsistent paths.", assemblySimpleName, version);
                     }
                 }
                 else
@@ -121,6 +126,22 @@ public class NetFrameworkAssemblyResolver
 
         this.knownAssemblies = knownAssemblies;
     }
+
+    /// <summary>
+    /// Events that may be traced to the <see cref="TraceSource"/>.
+    /// </summary>
+    public enum TraceEvents
+    {
+        /// <summary>
+        /// Occurs when an invalid configuration is encountered.
+        /// </summary>
+        InvalidConfiguration,
+    }
+
+    /// <summary>
+    /// Gets the <see cref="TraceSource"/> to use for logging.
+    /// </summary>
+    protected TraceSource? TraceSource { get; }
 
     /// <summary>
     /// Gets the list of probing paths through which a search for assemblies may be conducted.
@@ -238,6 +259,7 @@ public class NetFrameworkAssemblyResolver
         }
     }
 
+#if NETCOREAPP3_1_OR_GREATER
     /// <summary>
     /// Loads the given assembly into the appropriate <see cref="AssemblyLoadContext"/>.
     /// </summary>
@@ -269,19 +291,66 @@ public class NetFrameworkAssemblyResolver
             return null;
         }
     }
+#elif NETFRAMEWORK
+    /// <summary>
+    /// Loads the given assembly into the current <see cref="AppDomain"/>.
+    /// </summary>
+    /// <param name="assemblyName">
+    /// The name of the assembly to load.
+    /// If a <see cref="AssemblyName.CodeBase"/> property is provided, that will be used as a fallback after all other attempts to load the assembly have failed.
+    /// </param>
+    /// <returns>The assembly, if it was loaded.</returns>
+    /// <inheritdoc cref="AppDomain.Load(AssemblyName)" path="/exception"/>
+    public Assembly? Load(AssemblyName assemblyName)
+    {
+        try
+        {
+            AssemblyName? redirectedAssemblyName = this.GetAssemblyNameByPolicy(assemblyName);
+            if (redirectedAssemblyName is { CodeBase: not null })
+            {
+                return Assembly.LoadFrom(redirectedAssemblyName.CodeBase);
+            }
 
+            if (assemblyName.CodeBase is not null && this.FileExists(assemblyName.CodeBase))
+            {
+                return Assembly.LoadFrom(assemblyName.CodeBase);
+            }
+
+            return null;
+        }
+        catch (FileNotFoundException)
+        {
+            return null;
+        }
+    }
+#else
+    /// <summary>
+    /// Loads the given assembly into the current AppDomain or appropriate AssemblyLoadContext.
+    /// </summary>
+    /// <param name="assemblyName">
+    /// The name of the assembly to load.
+    /// If a <see cref="AssemblyName.CodeBase"/> property is provided, that will be used as a fallback after all other attempts to load the assembly have failed.
+    /// </param>
+    /// <returns>The assembly, if it was loaded.</returns>
+    public Assembly? Load(AssemblyName assemblyName)
+    {
+        throw new NotSupportedException("This is a reference assembly and not meant for execution.");
+    }
+#endif
+
+#if NETCOREAPP
     /// <inheritdoc cref="HookupResolver(AssemblyLoadContext, bool)"/>
     public void HookupResolver(AssemblyLoadContext loadContext) => this.HookupResolver(loadContext, blockMoreResolvers: false);
 
     /// <summary>
-    /// Adds a <see cref="AssemblyLoadContext.Resolving"/> event handler
+    /// Adds an <see cref="AssemblyLoadContext.Resolving"/> event handler
     /// that will assist in finding and loading assemblies based on the rules in the configuration file this instance was initialized with.
     /// </summary>
     /// <param name="loadContext">The load context to add a handler to.</param>
     /// <param name="blockMoreResolvers"><c>true</c> to block other <see cref="AssemblyLoadContext.Resolving"/> event handlers from being effectively added.</param>
     public void HookupResolver(AssemblyLoadContext loadContext, bool blockMoreResolvers)
     {
-        loadContext.Resolving += this.AssemblyLoadContext_Resolving;
+        loadContext.Resolving += (s, assemblyName) => this.Load(assemblyName);
 
         if (blockMoreResolvers)
         {
@@ -290,6 +359,25 @@ public class NetFrameworkAssemblyResolver
             loadContext.Resolving += (s, e) => throw new FileNotFoundException($"Assembly '{e}' could not be found.");
         }
     }
+#elif NETFRAMEWORK
+    /// <summary>
+    /// Adds an <see cref="AppDomain.AssemblyResolve"/> event handler
+    /// that will assist in finding and loading assemblies based on the rules in the configuration file this instance was initialized with.
+    /// </summary>
+    public void HookupResolver()
+    {
+        AppDomain.CurrentDomain.AssemblyResolve += (s, e) =>
+        {
+            AssemblyName? redirectedAssemblyName = this.GetAssemblyNameByPolicy(new AssemblyName(e.Name));
+            if (redirectedAssemblyName is { CodeBase: not null } && File.Exists(redirectedAssemblyName.CodeBase))
+            {
+                return Assembly.LoadFile(redirectedAssemblyName.CodeBase);
+            }
+
+            return null;
+        };
+    }
+#endif
 
     /// <inheritdoc cref="File.Exists(string)"/>
     protected virtual bool FileExists(string path) => File.Exists(path);
@@ -315,11 +403,7 @@ public class NetFrameworkAssemblyResolver
         return true;
     }
 
-    private Assembly? AssemblyLoadContext_Resolving(AssemblyLoadContext sender, AssemblyName assemblyName)
-    {
-        return this.Load(assemblyName);
-    }
-
+#if NETCOREAPP
     /// <summary>
     /// Loads the given assembly into the appropriate <see cref="AssemblyLoadContext"/>.
     /// </summary>
@@ -342,6 +426,7 @@ public class NetFrameworkAssemblyResolver
 
         return loadContext.LoadFromAssemblyPath(codebase);
     }
+#endif
 
     private struct AssemblyLoadRules
     {
@@ -380,9 +465,17 @@ public class NetFrameworkAssemblyResolver
     [DebuggerDisplay("{" + nameof(DebuggerDisplay) + ",nq}")]
     private struct BindingRedirect : IEquatable<BindingRedirect>
     {
+#if NETSTANDARD2_0 || NETFRAMEWORK
+        private static readonly char[] HyphenArray = new char[] { '-' };
+#endif
+
         internal BindingRedirect(string oldVersion, string newVersion)
         {
+#if NETSTANDARD2_0 || NETFRAMEWORK
+            string[] oldVersions = oldVersion.Split(HyphenArray);
+#else
             string[] oldVersions = oldVersion.Split('-', 2);
+#endif
             this.OldVersion = oldVersions.Length switch
             {
                 1 => (Version.Parse(oldVersions[0]), Version.Parse(oldVersions[0])),
@@ -509,8 +602,9 @@ public class NetFrameworkAssemblyResolver
         }
     }
 
+#if NETCOREAPP
     /// <summary>
-    /// The <see cref="AssemblyLoadContext"/> to use for all contexts created by <see cref="NetFrameworkAssemblyResolver.AssemblyLoadContext_Resolving"/>.
+    /// The <see cref="AssemblyLoadContext"/> to use for all contexts created by <see cref="Load(AssemblyName, string)"/>.
     /// </summary>
     [DebuggerDisplay("{" + nameof(DebuggerDisplay) + ",nq}")]
     private class VSAssemblyLoadContext : AssemblyLoadContext
@@ -533,6 +627,7 @@ public class NetFrameworkAssemblyResolver
 
         private string DebuggerDisplay => this.Name ?? "(no name)";
     }
+#endif
 }
 
 #endif

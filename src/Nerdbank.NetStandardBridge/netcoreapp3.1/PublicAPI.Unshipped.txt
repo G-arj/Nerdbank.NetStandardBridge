@@ -1,0 +1,17 @@
+Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver
+Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.BaseDir.get -> string!
+Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.GetAssemblyNameByPolicy(System.Reflection.AssemblyName! assemblyName) -> System.Reflection.AssemblyName?
+Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.HookupResolver(System.Runtime.Loader.AssemblyLoadContext! loadContext) -> void
+Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.HookupResolver(System.Runtime.Loader.AssemblyLoadContext! loadContext, bool blockMoreResolvers) -> void
+Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.Load(System.Reflection.AssemblyName! assemblyName) -> System.Reflection.Assembly?
+Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.NetFrameworkAssemblyResolver(string! configFile, string? baseDir = null) -> void
+Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.ProbingPaths.get -> System.Collections.Generic.IReadOnlyList<string!>!
+System.Runtime.InteropServices.ImportedFromTypeLibAttribute (forwarded, contained in System.Runtime.InteropServices)
+System.Runtime.InteropServices.ImportedFromTypeLibAttribute.ImportedFromTypeLibAttribute(string! tlbFile) -> void (forwarded, contained in System.Runtime.InteropServices)
+System.Runtime.InteropServices.ImportedFromTypeLibAttribute.Value.get -> string! (forwarded, contained in System.Runtime.InteropServices)
+System.Runtime.InteropServices.TypeLibVersionAttribute (forwarded, contained in System.Runtime.InteropServices)
+System.Runtime.InteropServices.TypeLibVersionAttribute.MajorVersion.get -> int (forwarded, contained in System.Runtime.InteropServices)
+System.Runtime.InteropServices.TypeLibVersionAttribute.MinorVersion.get -> int (forwarded, contained in System.Runtime.InteropServices)
+System.Runtime.InteropServices.TypeLibVersionAttribute.TypeLibVersionAttribute(int major, int minor) -> void (forwarded, contained in System.Runtime.InteropServices)
+virtual Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.FileExists(string! path) -> bool
+virtual Nerdbank.NetStandardBridge.NetFrameworkAssemblyResolver.GetAssemblyName(string! assemblyFile) -> System.Reflection.AssemblyName!
